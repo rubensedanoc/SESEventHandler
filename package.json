@@ -1,0 +1,33 @@
+{
+  "name": "seseventhandler",
+  "version": "1.0.0",
+  "description": "Service to capture Amazon SES events sent by Amazon SNS via a POST webhook",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest --testPathPatterns=tests/"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rubensedanoc/SESEventHandler.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rubensedanoc/SESEventHandler/issues"
+  },
+  "homepage": "https://github.com/rubensedanoc/SESEventHandler#readme",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
+  }
+}
