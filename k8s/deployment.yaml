@@ -13,6 +13,8 @@ spec:
       labels:
         app: ses-sns-events
     spec:
+      imagePullSecrets:
+        - name: ecr-pull-secret
       containers:
         - name: ses-sns-events
           image: ses-sns-events:latest

@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ecr-pull-secret-refresh
+  namespace: prd
+spec:
+  schedule: "0 */6 * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ecr-secret-refresher
+          restartPolicy: OnFailure
+          containers:
+            - name: refresh-ecr-secret
+              image: alpine:3.20
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: ecr-refresh-aws
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: ecr-refresh-aws
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: ecr-refresh-aws
+                      key: AWS_REGION
+                - name: ECR_REGISTRY
+                  valueFrom:
+                    secretKeyRef:
+                      name: ecr-refresh-aws
+                      key: ECR_REGISTRY
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  apk add --no-cache aws-cli kubectl >/dev/null
+                  TOKEN="$(aws ecr get-login-password --region "$AWS_REGION")"
+                  AUTH="$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '\n')"
+                  DOCKER_CONFIG_JSON="$(printf '{"auths":{"%s":{"username":"AWS","password":"%s","auth":"%s"}}}' "$ECR_REGISTRY" "$TOKEN" "$AUTH")"
+
+                  cat <<EOF >/tmp/ecr-secret.yaml
+                  apiVersion: v1
+                  kind: Secret
+                  metadata:
+                    name: ecr-pull-secret
+                    namespace: prd
+                  type: kubernetes.io/dockerconfigjson
+                  data:
+                    .dockerconfigjson: $(printf '%s' "$DOCKER_CONFIG_JSON" | base64 | tr -d '\n')
+                  EOF
+
+                  kubectl apply -f /tmp/ecr-secret.yaml

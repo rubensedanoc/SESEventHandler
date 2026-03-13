@@ -131,6 +131,7 @@ Importante:
 - El proceso maneja `SIGTERM`, así que el pod puede apagarse de forma ordenada durante despliegues.
 - Te dejé ejemplos base en [k8s/namespace.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/namespace.yaml), [k8s/configmap.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.yaml), [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), [k8s/deployment.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.yaml) y [k8s/service.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/service.yaml).
 - El repo debe guardar solo la plantilla [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), nunca un secret real con credenciales.
+- El deployment ya está preparado para usar `imagePullSecrets` con el secret `ecr-pull-secret`.
 
 Aplicación básica:
 
@@ -150,6 +151,47 @@ kubectl -n prd create secret generic ses-sns-events-secrets \
 ```
 
 O si prefieres archivo, crea un `k8s/secret.yaml` local no versionado basado en `k8s/secret.example.yaml`.
+
+## Acceso de Kubernetes a AWS ECR
+
+Tu clúster on-prem necesita un `imagePullSecret` para poder descargar la imagen desde ECR.
+
+### Opción 1: crear el secret manualmente
+
+Te dejé un ejemplo en [k8s/ecr-pull-secret.example.sh](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-pull-secret.example.sh).
+
+Ejemplo:
+
+```bash
+AWS_REGION=us-east-1 \
+ECR_REGISTRY=123456789012.dkr.ecr.us-east-1.amazonaws.com \
+NAMESPACE=prd \
+bash k8s/ecr-pull-secret.example.sh
+```
+
+Esto crea o actualiza el secret `ecr-pull-secret` en `prd`.
+
+### Opción 2: renovación automática con CronJob
+
+Como el token de ECR expira, te dejé manifiestos para renovarlo automáticamente:
+
+- [k8s/ecr-refresh-secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-refresh-secret.example.yaml)
+- [k8s/ecr-refresh-rbac.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-refresh-rbac.yaml)
+- [k8s/ecr-refresh-cronjob.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-refresh-cronjob.yaml)
+
+Qué hacer:
+
+1. Crea un archivo local `k8s/ecr-refresh-secret.yaml` basado en `k8s/ecr-refresh-secret.example.yaml`.
+2. Pon allí tus credenciales AWS técnicas y el registry ECR real.
+3. Aplícalo junto con RBAC y CronJob.
+
+```bash
+kubectl apply -f k8s/ecr-refresh-secret.yaml
+kubectl apply -f k8s/ecr-refresh-rbac.yaml
+kubectl apply -f k8s/ecr-refresh-cronjob.yaml
+```
+
+`k8s/ecr-refresh-secret.yaml` está ignorado por git y no debe subirse al repo.
 
 ## Endpoint
 
