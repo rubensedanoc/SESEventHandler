@@ -1,0 +1,93 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version to deploy, for example 1.0.1"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
+  K8S_DEPLOYMENT_NAME: ${{ vars.K8S_DEPLOYMENT_NAME }}
+  K8S_CONTAINER_NAME: ${{ vars.K8S_CONTAINER_NAME }}
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Validate version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Version must follow semantic versioning like 1.0.1"
+            exit 1
+          fi
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p "$HOME/.kube"
+
+          if [ -n "$KUBE_CONFIG_B64" ]; then
+            if [ "$(uname -s)" = "Darwin" ]; then
+              printf '%s' "$KUBE_CONFIG_B64" | base64 -D > "$HOME/.kube/config"
+            else
+              printf '%s' "$KUBE_CONFIG_B64" | base64 --decode > "$HOME/.kube/config"
+            fi
+          elif [ -n "$KUBE_CONFIG" ]; then
+            printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
+          else
+            echo "Either KUBE_CONFIG_B64 or KUBE_CONFIG must be configured in GitHub Secrets."
+            exit 1
+          fi
+
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Verify cluster access
+        run: kubectl cluster-info
+
+      - name: Deploy new image
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ -z "$ECR_REGISTRY" ] || [ -z "$ECR_REPOSITORY" ]; then
+            echo "GitHub variables ECR_REGISTRY and ECR_REPOSITORY are required."
+            exit 1
+          fi
+
+          NAMESPACE="${K8S_NAMESPACE:-prd}"
+          DEPLOYMENT_NAME="${K8S_DEPLOYMENT_NAME:-ses-sns-events}"
+          CONTAINER_NAME="${K8S_CONTAINER_NAME:-ses-sns-events}"
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$VERSION"
+
+          kubectl -n "$NAMESPACE" set image deployment/"$DEPLOYMENT_NAME" "$CONTAINER_NAME=$IMAGE_URI"
+          kubectl -n "$NAMESPACE" rollout status deployment/"$DEPLOYMENT_NAME" --timeout=180s
+
+      - name: Deployment summary
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          NAMESPACE="${K8S_NAMESPACE:-prd}"
+          DEPLOYMENT_NAME="${K8S_DEPLOYMENT_NAME:-ses-sns-events}"
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$VERSION"
+
+          {
+            echo "## Kubernetes deployment updated"
+            echo ""
+            echo "- Namespace: \`$NAMESPACE\`"
+            echo "- Deployment: \`$DEPLOYMENT_NAME\`"
+            echo "- Image: \`$IMAGE_URI\`"
+          } >> "$GITHUB_STEP_SUMMARY"

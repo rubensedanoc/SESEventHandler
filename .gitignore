@@ -1,0 +1,6 @@
+node_modules
+.env
+.env.local
+npm-debug.log*
+k8s/secret.yaml
+.idea

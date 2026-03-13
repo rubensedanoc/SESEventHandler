@@ -1,0 +1,26 @@
+{
+  "name": "ses-sns-events",
+  "version": "1.0.0",
+  "description": "HTTP receiver for Amazon SNS notifications from SES with MongoDB persistence.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "check": "node --check src/server.js"
+  },
+  "keywords": [
+    "aws",
+    "ses",
+    "sns",
+    "mongodb",
+    "webhook"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.1"
+  }
+}
