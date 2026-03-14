@@ -97,7 +97,7 @@ Te dejé también el workflow en [.github/workflows/deploy-k8s.yml](/Users/ruben
 
 Qué necesitas configurar en GitHub:
 
-- Secret `KUBE_CONFIG_B64` con tu kubeconfig en base64, o secret `KUBE_CONFIG` en texto plano
+- Secret `KUBE_CONFIG_B64` con tu kubeconfig en base64
 - Variable `ECR_REGISTRY`
 - Variable `ECR_REPOSITORY`
 - Variable opcional `K8S_NAMESPACE` si quieres sobrescribir `prd`
@@ -107,9 +107,14 @@ Qué necesitas configurar en GitHub:
 Cómo funciona:
 
 - corre en tu `self-hosted runner`
-- carga el kubeconfig cifrado desde GitHub Secrets
+- carga el kubeconfig cifrado desde GitHub Secrets en formato base64
 - actualiza la imagen del deployment con la versión que indiques
 - espera el `rollout` para confirmar que Kubernetes levantó bien
+
+Requisito importante:
+
+- El workflow de deploy no podrá ejecutarse correctamente si no existe el secret `KUBE_CONFIG_B64` en GitHub Secrets.
+- Ese secret es obligatorio porque desde allí se carga el acceso al clúster Kubernetes.
 
 Ejemplo de imagen que desplegará:
 

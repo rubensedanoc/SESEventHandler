@@ -37,7 +37,6 @@ jobs:
       - name: Configure kubeconfig
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
           mkdir -p "$HOME/.kube"
 
@@ -47,10 +46,8 @@ jobs:
             else
               printf '%s' "$KUBE_CONFIG_B64" | base64 --decode > "$HOME/.kube/config"
             fi
-          elif [ -n "$KUBE_CONFIG" ]; then
-            printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
           else
-            echo "Either KUBE_CONFIG_B64 or KUBE_CONFIG must be configured in GitHub Secrets."
+            echo "KUBE_CONFIG_B64 must be configured in GitHub Secrets."
             exit 1
           fi
 
