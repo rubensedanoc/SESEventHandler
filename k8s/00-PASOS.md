@@ -146,8 +146,8 @@ Recién allí conviene activar el workflow de GitHub Actions para despliegue aut
 Si tu HAProxy ya termina SSL, esta es la opcion recomendada.
 
 1. Asegurate de tener un Ingress Controller instalado en Kubernetes
-2. Copia [ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) a `k8s/ingress.yaml`
-3. Cambia el `host` por tu dominio real
+2. Si tu HAProxy reenviara al Ingress Controller por `NodePort`, puedes tomar como base [ingress-controller-service.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-controller-service.example.yaml)
+3. Usa `k8s/ingress.yaml` y cambia el `host` por tu dominio real
 4. Aplica:
 
 ```bash

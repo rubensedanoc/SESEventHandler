@@ -239,6 +239,7 @@ kubectl apply -f k8s/ingress.yaml
 Requisito:
 
 - Debes tener un Ingress Controller instalado en el cluster, por ejemplo NGINX Ingress.
+- Si necesitas exponer ese Ingress Controller por `NodePort` HTTP para HAProxy, te dejé un ejemplo en [k8s/ingress-controller-service.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-controller-service.example.yaml).
 
 TLS opcional dentro de Kubernetes:
 
