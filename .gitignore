@@ -5,4 +5,5 @@ npm-debug.log*
 k8s/secret.yaml
 k8s/ecr-refresh-secret.yaml
 k8s/configmap.yaml
+k8s/deployment.yaml
 .idea

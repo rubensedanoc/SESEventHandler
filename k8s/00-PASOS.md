@@ -8,7 +8,8 @@ kubectl apply -f k8s/namespace.yaml
 
 ## 2. Ajusta la imagen del deployment
 
-Edita [deployment.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.yaml) y reemplaza:
+1. Copia [deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml) a `k8s/deployment.yaml`
+2. Reemplaza:
 
 ```yaml
 image: REPLACE_WITH_ECR_REGISTRY/REPLACE_WITH_ECR_REPOSITORY:latest
@@ -60,7 +61,7 @@ NAMESPACE=prd \
 bash k8s/ecr-pull-secret.example.sh
 ```
 
-Esto crea el secret `ecr-pull-secret`, que ya está referenciado por [deployment.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.yaml).
+Esto crea el secret `ecr-pull-secret`, que ya está referenciado por `k8s/deployment.yaml`.
 
 ## 6. Aplica la configuracion base
 
@@ -72,6 +73,7 @@ kubectl apply -f k8s/configmap.yaml
 ## 7. Despliega la aplicacion
 
 ```bash
+cp k8s/deployment.example.yaml k8s/deployment.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
