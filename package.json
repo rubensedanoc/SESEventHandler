@@ -1,6 +1,6 @@
 {
   "name": "ses-sns-events",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "HTTP receiver for Amazon SNS notifications from SES with MongoDB persistence.",
   "type": "module",
   "main": "src/server.js",
