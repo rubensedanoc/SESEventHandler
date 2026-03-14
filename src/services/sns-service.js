@@ -33,7 +33,19 @@ export async function confirmSubscription(subscribeUrl) {
 }
 
 export function parseSnsBody(body) {
-  if (!body || typeof body !== "object") {
+  if (!body) {
+    throw new Error("Request body is empty or invalid.");
+  }
+
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      throw new Error("Request body is empty or invalid.");
+    }
+  }
+
+  if (typeof body !== "object") {
     throw new Error("Request body is empty or invalid.");
   }
 

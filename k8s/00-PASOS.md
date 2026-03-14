@@ -141,22 +141,63 @@ Recién allí conviene activar el workflow de GitHub Actions para despliegue aut
 - el `CronJob` renovando credenciales
 - el deployment levantando correctamente en `prd`
 
-## 10. Exponerlo por Ingress detras de HAProxy
+## 10. Instala el Ingress Controller
+
+Para bare metal/on-prem, puedes instalar NGINX Ingress con el manifiesto oficial:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.14.3/deploy/static/provider/baremetal/deploy.yaml
+```
+
+Espera a que quede listo:
+
+```bash
+kubectl -n ingress-nginx get pods
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+kubectl get ingressclass
+```
+
+Si tu HAProxy reenviara HTTP al Ingress Controller por `NodePort`, puedes tomar como base [ingress-controller-service.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-controller-service.example.yaml):
+
+```bash
+kubectl apply -f k8s/ingress-controller-service.example.yaml
+kubectl -n ingress-nginx get svc
+```
+
+## 11. Exponerlo por Ingress detras de HAProxy
 
 Si tu HAProxy ya termina SSL, esta es la opcion recomendada.
 
 1. Asegurate de tener un Ingress Controller instalado en Kubernetes
 2. Si tu HAProxy reenviara al Ingress Controller por `NodePort`, puedes tomar como base [ingress-controller-service.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-controller-service.example.yaml)
-3. Usa `k8s/ingress.yaml` y cambia el `host` por tu dominio real
-4. Aplica:
+3. Copia [ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) a `k8s/ingress.yaml`
+4. Cambia el `host` por tu dominio real, por ejemplo `ses.example.com`
+5. Aplica:
 
 ```bash
+cp k8s/ingress.example.yaml k8s/ingress.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
 Tu HAProxy deberia reenviar trafico HTTP al Ingress Controller dentro del cluster o a su `NodePort` HTTP.
 
-## 11. TLS opcional dentro de Kubernetes
+Verifica:
+
+```bash
+kubectl -n prd get ingress
+kubectl -n prd describe ingress ses-sns-events
+```
+
+Si quieres probar antes de mover DNS, puedes hacer una prueba enviando manualmente el header `Host` hacia el NodePort HTTP del Ingress Controller:
+
+```bash
+curl -H "Host: ses.example.com" http://IP_DEL_NODO:30080/health
+```
+
+## 12. TLS opcional dentro de Kubernetes
 
 Solo necesitas esto si mas adelante quieres que Kubernetes tambien maneje certificados.
 

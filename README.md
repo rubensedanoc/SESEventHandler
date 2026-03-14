@@ -17,7 +17,7 @@ Servicio Node.js para recibir notificaciones HTTP de Amazon SNS asociadas a Amaz
 
 ```env
 PORT=3000
-MONGODB_URI=mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/?replicaSet=rs0&authSource=admin
+MONGODB_URI=mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/ses_events?replicaSet=rs0&authSource=admin
 SNS_TOPIC_ARN=
 ```
 
@@ -49,7 +49,7 @@ Ejecutar contenedor:
 ```bash
 docker run --rm -p 3000:3000 \
   -e PORT=3000 \
-  -e MONGODB_URI="mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/?replicaSet=rs0&authSource=admin" \
+  -e MONGODB_URI="mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/ses_events?replicaSet=rs0&authSource=admin" \
   -e SNS_TOPIC_ARN="" \
   ses-sns-events:latest
 ```
@@ -159,10 +159,12 @@ Para producción, crea el secret real fuera del repo. Ejemplo:
 
 ```bash
 kubectl -n prd create secret generic ses-sns-events-secrets \
-  --from-literal=MONGODB_URI="mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/?replicaSet=rs0&authSource=admin"
+  --from-literal=MONGODB_URI="mongodb://USER:PASSWORD@HOST1,HOST2,HOST3,HOST4/ses_events?replicaSet=rs0&authSource=admin"
 ```
 
 O si prefieres archivo, crea un `k8s/secret.yaml` local no versionado basado en `k8s/secret.example.yaml`.
+
+Si no especificas el nombre de base en `MONGODB_URI`, Mongo/Mongoose usará `test` por defecto. Por eso los ejemplos del repo ya apuntan a `ses_events`.
 
 ## Acceso de Kubernetes a AWS ECR
 
@@ -223,6 +225,21 @@ El CronJob de refresco está configurado para ejecutarse cada 12 horas.
 
 ## Ingress e HAProxy
 
+Instalacion del Ingress Controller en bare metal:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.14.3/deploy/static/provider/baremetal/deploy.yaml
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+kubectl get ingressclass
+```
+
+Ese manifiesto corresponde a la guia oficial actual de ingress-nginx para bare metal con NodePort. Fuentes:
+- [Ingress-NGINX Bare Metal](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/)
+- [Ingress-NGINX Installation Guide](https://kubernetes.github.io/ingress-nginx/deploy/)
+
 Si tu HAProxy ya termina SSL, la opcion recomendada es:
 
 - HAProxy recibe HTTPS con tus certificados
@@ -236,10 +253,22 @@ cp k8s/ingress.example.yaml k8s/ingress.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
+Ejemplo de host:
+
+```yaml
+host: ses.example.com
+```
+
 Requisito:
 
 - Debes tener un Ingress Controller instalado en el cluster, por ejemplo NGINX Ingress.
 - Si necesitas exponer ese Ingress Controller por `NodePort` HTTP para HAProxy, te dejé un ejemplo en [k8s/ingress-controller-service.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-controller-service.example.yaml).
+
+Prueba util antes de mover DNS:
+
+```bash
+curl -H "Host: ses.example.com" http://IP_DEL_NODO:30080/health
+```
 
 TLS opcional dentro de Kubernetes:
 
