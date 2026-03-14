@@ -20,9 +20,10 @@ Por tu imagen real de ECR, por ejemplo:
 image: 841435092050.dkr.ecr.us-east-1.amazonaws.com/prd/ms-sesevents:latest
 ```
 
-## 3. Ajusta variables no sensibles
+## 3. Crea tu configmap local
 
-Edita [configmap.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.yaml) y revisa:
+1. Copia [configmap.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.example.yaml) a `k8s/configmap.yaml`
+2. Ajusta:
 
 - `PORT`
 - `SNS_TOPIC_ARN`
@@ -64,6 +65,7 @@ Esto crea el secret `ecr-pull-secret`, que ya está referenciado por [deployment
 ## 6. Aplica la configuracion base
 
 ```bash
+cp k8s/configmap.example.yaml k8s/configmap.yaml
 kubectl apply -f k8s/configmap.yaml
 ```
 

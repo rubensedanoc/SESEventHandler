@@ -5,4 +5,4 @@ metadata:
   namespace: prd
 data:
   PORT: "3000"
-  SNS_TOPIC_ARN: ""
+  SNS_TOPIC_ARN: "arn:aws:sns:us-east-1:ACCOUNT_ID:TOPIC_NAME"
