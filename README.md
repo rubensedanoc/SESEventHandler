@@ -135,11 +135,12 @@ Importante:
 - Configura `containerPort: 3000`.
 - Puedes usar `GET /health` como `readinessProbe` y `livenessProbe`.
 - El proceso maneja `SIGTERM`, así que el pod puede apagarse de forma ordenada durante despliegues.
-- Te dejé ejemplos base en [k8s/namespace.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/namespace.yaml), [k8s/configmap.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.example.yaml), [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), [k8s/deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml) y [k8s/service.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/service.yaml).
+- Te dejé ejemplos base en [k8s/namespace.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/namespace.yaml), [k8s/configmap.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.example.yaml), [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), [k8s/deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml), [k8s/service.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/service.yaml), [k8s/ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) y [k8s/ingress-tls.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-tls.example.yaml).
 - El orden sugerido de arranque inicial quedó documentado en [k8s/00-PASOS.md](/Users/rubensedano/Documents/Codex/SESEvents/k8s/00-PASOS.md).
 - El repo debe guardar solo la plantilla [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), nunca un secret real con credenciales.
 - El repo debe guardar solo la plantilla [k8s/configmap.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.example.yaml), para manejar localmente valores cambiantes como `SNS_TOPIC_ARN`.
 - El repo debe guardar solo la plantilla [k8s/deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml), para manejar localmente la imagen real de ECR.
+- El repo debe guardar solo las plantillas [k8s/ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) y [k8s/ingress-tls.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-tls.example.yaml), para que puedas ajustar dominio y TLS localmente.
 - El deployment ya está preparado para usar `imagePullSecrets` con el secret `ecr-pull-secret`.
 
 Aplicación básica:
@@ -174,13 +175,27 @@ Te dejé un ejemplo en [k8s/ecr-pull-secret.example.sh](/Users/rubensedano/Docum
 Ejemplo:
 
 ```bash
-AWS_REGION=us-east-1 \
-ECR_REGISTRY=123456789012.dkr.ecr.us-east-1.amazonaws.com \
-NAMESPACE=prd \
+set -a
+source .aws-ecr.env
+set +a
 bash k8s/ecr-pull-secret.example.sh
 ```
 
 Esto crea o actualiza el secret `ecr-pull-secret` en `prd`.
+
+Ejemplo de `.aws-ecr.env` local no versionado:
+
+```env
+AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
+AWS_REGION=us-east-1
+ECR_REGISTRY=123456789012.dkr.ecr.us-east-1.amazonaws.com
+NAMESPACE=prd
+```
+
+Puedes partir de [.aws-ecr.env.example](/Users/rubensedano/Documents/Codex/SESEvents/.aws-ecr.env.example).
+
+El script usa `docker run amazon/aws-cli` para obtener el password de ECR, asi que no necesitas instalar AWS CLI en la maquina donde lo ejecutes.
 
 ### Opción 2: renovación automática con CronJob
 
@@ -203,6 +218,32 @@ kubectl apply -f k8s/ecr-refresh-cronjob.yaml
 ```
 
 `k8s/ecr-refresh-secret.yaml` está ignorado por git y no debe subirse al repo.
+
+El CronJob de refresco está configurado para ejecutarse cada 12 horas.
+
+## Ingress e HAProxy
+
+Si tu HAProxy ya termina SSL, la opcion recomendada es:
+
+- HAProxy recibe HTTPS con tus certificados
+- HAProxy reenvia HTTP al Ingress Controller
+- el Ingress Controller enruta al service `ses-sns-events` en puerto `80`
+
+Te dejé una plantilla en [k8s/ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml). Debes copiarla a `k8s/ingress.yaml`, cambiar el `host` y aplicarla.
+
+```bash
+cp k8s/ingress.example.yaml k8s/ingress.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+Requisito:
+
+- Debes tener un Ingress Controller instalado en el cluster, por ejemplo NGINX Ingress.
+
+TLS opcional dentro de Kubernetes:
+
+- Si despues quieres que Kubernetes tambien termine SSL, usa [k8s/ingress-tls.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-tls.example.yaml).
+- Copialo a `k8s/ingress-tls.yaml`, crea el secret TLS y aplicalo.
 
 ## Endpoint
 

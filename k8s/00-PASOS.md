@@ -54,12 +54,32 @@ kubectl apply -f k8s/secret.yaml
 
 Usa el script [ecr-pull-secret.example.sh](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-pull-secret.example.sh):
 
+1. Copia [.aws-ecr.env.example](/Users/rubensedano/Documents/Codex/SESEvents/.aws-ecr.env.example) a `.aws-ecr.env`
+2. Completa:
+
+```env
+AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
+AWS_REGION=us-east-1
+ECR_REGISTRY=841435092050.dkr.ecr.us-east-1.amazonaws.com
+NAMESPACE=prd
+```
+
+3. Cargalo en tu shell:
+
 ```bash
-AWS_REGION=us-east-1 \
-ECR_REGISTRY=841435092050.dkr.ecr.us-east-1.amazonaws.com \
-NAMESPACE=prd \
+set -a
+source .aws-ecr.env
+set +a
+```
+
+4. Ejecuta:
+
+```bash
 bash k8s/ecr-pull-secret.example.sh
 ```
+
+El script usa `docker run amazon/aws-cli` para obtener el password de ECR, asi que no necesitas instalar AWS CLI en esa maquina.
 
 Esto crea el secret `ecr-pull-secret`, que ya está referenciado por `k8s/deployment.yaml`.
 
@@ -104,6 +124,8 @@ kubectl apply -f k8s/ecr-refresh-rbac.yaml
 kubectl apply -f k8s/ecr-refresh-cronjob.yaml
 ```
 
+El CronJob esta configurado para refrescar el secret cada 12 horas.
+
 ## 10. Verifica el cron de refresco
 
 ```bash
@@ -119,3 +141,38 @@ Recién allí conviene activar el workflow de GitHub Actions para despliegue aut
 - el `imagePullSecret` funcionando
 - el `CronJob` renovando credenciales
 - el deployment levantando correctamente en `prd`
+
+## 12. Exponerlo por Ingress detras de HAProxy
+
+Si tu HAProxy ya termina SSL, esta es la opcion recomendada.
+
+1. Asegurate de tener un Ingress Controller instalado en Kubernetes
+2. Copia [ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) a `k8s/ingress.yaml`
+3. Cambia el `host` por tu dominio real
+4. Aplica:
+
+```bash
+kubectl apply -f k8s/ingress.yaml
+```
+
+Tu HAProxy deberia reenviar trafico HTTP al Ingress Controller dentro del cluster o a su `NodePort` HTTP.
+
+## 13. TLS opcional dentro de Kubernetes
+
+Solo necesitas esto si mas adelante quieres que Kubernetes tambien maneje certificados.
+
+1. Copia [ingress-tls.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-tls.example.yaml) a `k8s/ingress-tls.yaml`
+2. Cambia el `host`
+3. Crea el secret TLS:
+
+```bash
+kubectl -n prd create secret tls ses-sns-events-tls \
+  --cert=/ruta/al/certificado.crt \
+  --key=/ruta/a/la/llave.key
+```
+
+4. Aplica el ingress TLS:
+
+```bash
+kubectl apply -f k8s/ingress-tls.yaml
+```

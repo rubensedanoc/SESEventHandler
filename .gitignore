@@ -1,9 +1,12 @@
 node_modules
 .env
 .env.local
+.aws-ecr.env
 npm-debug.log*
 k8s/secret.yaml
 k8s/ecr-refresh-secret.yaml
 k8s/configmap.yaml
 k8s/deployment.yaml
+k8s/ingress.yaml
+k8s/ingress-tls.yaml
 .idea

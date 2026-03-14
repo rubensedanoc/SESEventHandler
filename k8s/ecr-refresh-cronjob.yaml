@@ -4,7 +4,7 @@ metadata:
   name: ecr-pull-secret-refresh
   namespace: prd
 spec:
-  schedule: "0 */6 * * *"
+  schedule: "0 */12 * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 3
   jobTemplate:
