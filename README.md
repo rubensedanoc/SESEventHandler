@@ -87,6 +87,7 @@ El workflow:
 
 - valida que el tag y `package.json` tengan la misma versión
 - construye la imagen Docker para `linux/amd64`
+- publica la imagen con `--provenance=false`
 - publica en AWS ECR con tags `1.0.1` y `latest`
 
 También puedes lanzarlo manualmente desde GitHub Actions con `workflow_dispatch`, indicando una versión semántica.
