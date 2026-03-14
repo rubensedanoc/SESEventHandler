@@ -142,6 +142,7 @@ Importante:
 - El repo debe guardar solo la plantilla [k8s/deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml), para manejar localmente la imagen real de ECR.
 - El repo debe guardar solo las plantillas [k8s/ingress.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress.example.yaml) y [k8s/ingress-tls.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ingress-tls.example.yaml), para que puedas ajustar dominio y TLS localmente.
 - El deployment ya está preparado para usar `imagePullSecrets` con el secret `ecr-pull-secret`.
+- El deployment de ejemplo también deja DNS explícito con `8.8.8.8` y `8.8.4.4`, útil en entornos on-prem donde `ClusterFirst` no resuelve confiablemente salidas externas como AWS SNS.
 
 Aplicación básica:
 

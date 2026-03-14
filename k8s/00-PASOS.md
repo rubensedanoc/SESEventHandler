@@ -89,7 +89,13 @@ Por tu imagen real de ECR, por ejemplo:
 image: 841435092050.dkr.ecr.us-east-1.amazonaws.com/prd/ms-sesevents:latest
 ```
 
-3. Aplica:
+3. Si necesitas modificar DNS para salida externa, el ejemplo ya deja configurado:
+
+- `dnsPolicy: None`
+- `8.8.8.8`
+- `8.8.4.4`
+
+4. Aplica:
 
 ```bash
 cp k8s/deployment.example.yaml k8s/deployment.yaml

@@ -13,6 +13,19 @@ spec:
       labels:
         app: ses-sns-events
     spec:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+        searches:
+          - prd.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+          - ps.d2.restaurant.pe
+        options:
+          - name: ndots
+            value: "5"
       imagePullSecrets:
         - name: ecr-pull-secret
       containers:
