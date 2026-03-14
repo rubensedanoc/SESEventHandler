@@ -136,6 +136,7 @@ Importante:
 - Puedes usar `GET /health` como `readinessProbe` y `livenessProbe`.
 - El proceso maneja `SIGTERM`, así que el pod puede apagarse de forma ordenada durante despliegues.
 - Te dejé ejemplos base en [k8s/namespace.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/namespace.yaml), [k8s/configmap.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.yaml), [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), [k8s/deployment.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.yaml) y [k8s/service.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/service.yaml).
+- El orden sugerido de arranque inicial quedó documentado en [k8s/00-PASOS.md](/Users/rubensedano/Documents/Codex/SESEvents/k8s/00-PASOS.md).
 - El repo debe guardar solo la plantilla [k8s/secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/secret.example.yaml), nunca un secret real con credenciales.
 - El deployment ya está preparado para usar `imagePullSecrets` con el secret `ecr-pull-secret`.
 

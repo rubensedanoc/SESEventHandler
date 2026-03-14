@@ -17,7 +17,7 @@ spec:
         - name: ecr-pull-secret
       containers:
         - name: ses-sns-events
-          image: ses-sns-events:latest
+          image: REPLACE_WITH_ECR_REGISTRY/REPLACE_WITH_ECR_REPOSITORY:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
