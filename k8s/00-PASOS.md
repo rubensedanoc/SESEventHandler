@@ -6,22 +6,7 @@
 kubectl apply -f k8s/namespace.yaml
 ```
 
-## 2. Ajusta la imagen del deployment
-
-1. Copia [deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml) a `k8s/deployment.yaml`
-2. Reemplaza:
-
-```yaml
-image: REPLACE_WITH_ECR_REGISTRY/REPLACE_WITH_ECR_REPOSITORY:latest
-```
-
-Por tu imagen real de ECR, por ejemplo:
-
-```yaml
-image: 841435092050.dkr.ecr.us-east-1.amazonaws.com/prd/ms-sesevents:latest
-```
-
-## 3. Crea tu configmap local
+## 2. Crea tu configmap local
 
 1. Copia [configmap.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/configmap.example.yaml) a `k8s/configmap.yaml`
 2. Ajusta:
@@ -35,7 +20,7 @@ image: 841435092050.dkr.ecr.us-east-1.amazonaws.com/prd/ms-sesevents:latest
 kubectl apply -f k8s/configmap.yaml
 ```
 
-## 4. Crea el secret de la aplicacion
+## 3. Crea el secret de la aplicacion
 
 Tienes dos opciones:
 
@@ -56,7 +41,7 @@ Opcion B, por archivo local:
 kubectl apply -f k8s/secret.yaml
 ```
 
-## 5. Crea el imagePullSecret por primera vez
+## 4. Crea el imagePullSecret por primera vez
 
 Usa el script [ecr-pull-secret.example.sh](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-pull-secret.example.sh):
 
@@ -89,7 +74,22 @@ El script usa `docker run amazon/aws-cli` para obtener el password de ECR, asi q
 
 Esto crea el secret `ecr-pull-secret`, que ya está referenciado por `k8s/deployment.yaml`.
 
-## 6. Despliega la aplicacion
+## 5. Despliega la aplicacion
+
+1. Copia [deployment.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/deployment.example.yaml) a `k8s/deployment.yaml`
+2. Reemplaza:
+
+```yaml
+image: REPLACE_WITH_ECR_REGISTRY/REPLACE_WITH_ECR_REPOSITORY:latest
+```
+
+Por tu imagen real de ECR, por ejemplo:
+
+```yaml
+image: 841435092050.dkr.ecr.us-east-1.amazonaws.com/prd/ms-sesevents:latest
+```
+
+3. Aplica:
 
 ```bash
 cp k8s/deployment.example.yaml k8s/deployment.yaml
@@ -97,7 +97,7 @@ kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
-## 7. Verifica que levantó bien
+## 6. Verifica que levantó bien
 
 ```bash
 kubectl -n prd get pods
@@ -105,7 +105,7 @@ kubectl -n prd get svc
 kubectl -n prd rollout status deployment/ses-sns-events
 ```
 
-## 8. Activa la renovacion automatica del token de ECR
+## 7. Activa la renovacion automatica del token de ECR
 
 1. Copia [ecr-refresh-secret.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/ecr-refresh-secret.example.yaml) a `k8s/ecr-refresh-secret.yaml`
 2. Completa:
@@ -125,14 +125,14 @@ kubectl apply -f k8s/ecr-refresh-cronjob.yaml
 
 El CronJob esta configurado para refrescar el secret cada 12 horas.
 
-## 9. Verifica el cron de refresco
+## 8. Verifica el cron de refresco
 
 ```bash
 kubectl -n prd get cronjob
 kubectl -n prd get jobs
 ```
 
-## 10. Cuando ya funcione el deploy manual
+## 9. Cuando ya funcione el deploy manual
 
 Recién allí conviene activar el workflow de GitHub Actions para despliegue automático, porque ya tendrás:
 
@@ -141,7 +141,7 @@ Recién allí conviene activar el workflow de GitHub Actions para despliegue aut
 - el `CronJob` renovando credenciales
 - el deployment levantando correctamente en `prd`
 
-## 11. Exponerlo por Ingress detras de HAProxy
+## 10. Exponerlo por Ingress detras de HAProxy
 
 Si tu HAProxy ya termina SSL, esta es la opcion recomendada.
 
@@ -156,7 +156,7 @@ kubectl apply -f k8s/ingress.yaml
 
 Tu HAProxy deberia reenviar trafico HTTP al Ingress Controller dentro del cluster o a su `NodePort` HTTP.
 
-## 12. TLS opcional dentro de Kubernetes
+## 11. TLS opcional dentro de Kubernetes
 
 Solo necesitas esto si mas adelante quieres que Kubernetes tambien maneje certificados.
 
