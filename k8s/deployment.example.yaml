@@ -4,7 +4,14 @@ metadata:
   name: ses-sns-events
   namespace: prd
 spec:
-  replicas: 1
+  replicas: 2
+  revisionHistoryLimit: 2
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: ses-sns-events
@@ -13,6 +20,7 @@ spec:
       labels:
         app: ses-sns-events
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
         - name: ecr-pull-secret
       containers:
@@ -39,6 +47,12 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
           resources:
             requests:
               cpu: 100m

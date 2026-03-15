@@ -97,6 +97,14 @@ kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
+Si quieres escalamiento horizontal, copia tambien [hpa.example.yaml](/Users/rubensedano/Documents/Codex/SESEvents/k8s/hpa.example.yaml) a `k8s/hpa.yaml` y aplicalo:
+
+```bash
+cp k8s/hpa.example.yaml k8s/hpa.yaml
+kubectl apply -f k8s/hpa.yaml
+kubectl -n prd get hpa
+```
+
 ## 6. Verifica que levantó bien
 
 ```bash
