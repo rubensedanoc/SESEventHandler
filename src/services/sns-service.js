@@ -80,7 +80,9 @@ export function validateTopicArn(topicArn, allowedTopicArn) {
 }
 
 export async function storeSesEvent(snsMessage, sesMessage) {
-  const notificationType = sesMessage?.notificationType ?? snsMessage.Type ?? "Unknown";
+  const snsType = snsMessage.Type !== "Notification" ? snsMessage.Type : undefined;
+  // sesMessage uses "notificationType" (legacy) or "eventType" (SES Event Publishing)
+  const notificationType = sesMessage?.notificationType ?? sesMessage?.eventType ?? snsType ?? "Unknown";
   const mail = sesMessage?.mail;
 
   const event = await SesEvent.create({
@@ -98,6 +100,9 @@ export async function storeSesEvent(snsMessage, sesMessage) {
       parseDate(sesMessage?.delivery?.timestamp) ??
       parseDate(sesMessage?.bounce?.timestamp) ??
       parseDate(sesMessage?.complaint?.timestamp) ??
+      parseDate(sesMessage?.deliveryDelay?.timestamp) ??
+      parseDate(sesMessage?.open?.timestamp) ??
+      parseDate(sesMessage?.click?.timestamp) ??
       parseDate(mail?.timestamp),
     delivery: sesMessage?.delivery
       ? {
@@ -122,6 +127,36 @@ export async function storeSesEvent(snsMessage, sesMessage) {
     reject: sesMessage?.reject
       ? {
           reason: sesMessage.reject.reason
+        }
+      : undefined,
+    deliveryDelay: sesMessage?.deliveryDelay
+      ? {
+          ...sesMessage.deliveryDelay,
+          timestamp: parseDate(sesMessage.deliveryDelay.timestamp),
+          expirationTime: parseDate(sesMessage.deliveryDelay.expirationTime),
+          delayedRecipients: normalizeRecipients(sesMessage.deliveryDelay.delayedRecipients)
+        }
+      : undefined,
+    open: sesMessage?.open
+      ? {
+          timestamp: parseDate(sesMessage.open.timestamp),
+          userAgent: sesMessage.open.userAgent,
+          ipAddress: sesMessage.open.ipAddress
+        }
+      : undefined,
+    click: sesMessage?.click
+      ? {
+          timestamp: parseDate(sesMessage.click.timestamp),
+          userAgent: sesMessage.click.userAgent,
+          ipAddress: sesMessage.click.ipAddress,
+          link: sesMessage.click.link,
+          linkTags: sesMessage.click.linkTags
+        }
+      : undefined,
+    renderingFailure: sesMessage?.failure
+      ? {
+          errorMessage: sesMessage.failure.errorMessage,
+          templateName: sesMessage.failure.templateName
         }
       : undefined,
     rawSnsMessage: snsMessage,
