@@ -29,7 +29,15 @@ const sesEventSchema = new mongoose.Schema(
   {
     notificationType: {
       type: String,
-      enum: ["Delivery", "Bounce", "Complaint", "Reject", "SubscriptionConfirmation", "Unknown"],
+      enum: [
+        // Legacy SES Notifications
+        "Delivery", "Bounce", "Complaint", "Reject",
+        // SES Event Publishing (configuration sets)
+        "Send", "Open", "Click", "DeliveryDelay", "RenderingFailure", "Subscription",
+        // SNS control
+        "SubscriptionConfirmation",
+        "Unknown"
+      ],
       required: true
     },
     snsMessageId: { type: String, index: true },
@@ -63,6 +71,29 @@ const sesEventSchema = new mongoose.Schema(
     },
     reject: {
       reason: String
+    },
+    deliveryDelay: {
+      delayType: String,
+      expirationTime: Date,
+      reportingMTA: String,
+      timestamp: Date,
+      delayedRecipients: [recipientSchema]
+    },
+    open: {
+      timestamp: Date,
+      userAgent: String,
+      ipAddress: String
+    },
+    click: {
+      timestamp: Date,
+      userAgent: String,
+      ipAddress: String,
+      link: String,
+      linkTags: { type: mongoose.Schema.Types.Mixed }
+    },
+    renderingFailure: {
+      errorMessage: String,
+      templateName: String
     },
     rawSnsMessage: { type: mongoose.Schema.Types.Mixed, required: true },
     rawSesMessage: mongoose.Schema.Types.Mixed
